@@ -25,10 +25,19 @@ def test_fetch_video_id():
     assert data[1] == "仮装大賞 高坂海美"
 
 
+@pytest.mark.parametrize(
+    "overwrite_flag",
+    (True, pytest.param(False, marks=pytest.mark.xfail(raises=RuntimeError))),
+)
 @pytest.mark.parametrize("video_id", ["sm37701231", "so24277772"])
-def test_download_movie(tmp_path, video_id, nico_config):
+def test_download_movie(tmp_path, video_id, overwrite_flag, nico_config):
     manager = DownloadManager(uid=nico_config["uid"], passwd=nico_config["passwd"])
     target_path = tmp_path / "tmp.mp4"
-    ret_path = manager.download_video(video_id=video_id, save_path=target_path)
+
+    # make dummy file to overwrite
+    Path.touch(target_path)
+    ret_path = manager.download_video(
+        video_id=video_id, save_path=target_path, overwrite=overwrite_flag
+    )
     assert target_path.exists()
     assert ret_path == target_path

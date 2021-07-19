@@ -16,8 +16,21 @@ class DownloadManager(object):
         self._uid = uid
         self._passwd = passwd
 
-    def download_video(self, video_id: str, save_path: Path) -> Path:
+    def download_video(
+        self,
+        video_id: str,
+        save_path: Path,
+        overwrite: bool = False,
+        dry_run: bool = False,
+    ) -> Path:
         url = self.movie_url_prefix + str(video_id)
+        if dry_run:
+            print(f"#DRYRUN# Download from url: {url}")
+            return save_path
+
+        if not overwrite and save_path.exists():
+            raise RuntimeError(f"{save_path} already exists.")
+
         try:
             print(nndownload)
             nndownload.execute(
@@ -50,13 +63,20 @@ def fetch_video_id(query: str, targets: str) -> List[Tuple[str, str]]:
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument(
+        "--outdir", type=str, default="./", help="output root directory"
+    )
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="download action will not be actually performed",
+    )
+    parser.add_argument(
         "--overwrite", action="store_true", help="Overwrite the mp4 file if existing."
     )
     args = parser.parse_args()
 
     params = {
-        # "q": "THE IDOLM@STER MillionRADIO",
-        "q": "仮装大賞 高坂海美",
+        "q": "THE IDOLM@STER MillionRADIO",
         "targets": "title",
         "fields": "contentId,title",
         "_sort": "startTime",
@@ -67,7 +87,7 @@ def main() -> None:
     movie_id = response_dict["data"][0]["contentId"]
     title = response_dict["data"][0]["title"]
 
-    results = fetch_video_id(query="仮装大賞 高坂海美", targets="title")
+    results = fetch_video_id(query="THE IDOLM@STER MillionRADIO", targets="title")
     save_root = Path("/mnt/c/Users/ayase/Downloads")
 
     with open("./passwd.json", "r") as f:
@@ -78,7 +98,7 @@ def main() -> None:
 
         if save_path.exists() and not args.overwrite:
             raise RuntimeError(f"{save_path} already exists.")
-        manager.download_video(movie_id, save_path)
+        manager.download_video(movie_id, save_path, args.dry_run)
 
 
 if __name__ == "__main__":
