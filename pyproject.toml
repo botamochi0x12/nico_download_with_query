@@ -6,8 +6,8 @@ authors = ["TaizoAyase <zxcvbnmkind@gmail.com>"]
 
 [tool.poetry.dependencies]
 python = "^3.9"
-niconico-dl = "^1.1.2"
 requests = "^2.26.0"
+nndownload = "^1.11"
 
 [tool.poetry.dev-dependencies]
 pysen = {extras = ["lint"], version = "^0.9.1"}
@@ -17,6 +17,7 @@ jedi = "0.17.2"
 [tool.pysen.lint]
 enable_black = true
 enable_flake8 = true
+enable_isort = true
 enable_mypy = true
 mypy_preset = "strict"
 line_length = 88
