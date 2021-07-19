@@ -1,0 +1,8 @@
+[
+    {
+        "q": "パリパリ ラジオ関西",
+        "targets": "tags",
+        "fields": "contentId,title",
+        "_sort": "startTime"
+    }
+]
