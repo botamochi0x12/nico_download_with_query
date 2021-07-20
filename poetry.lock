@@ -554,7 +554,7 @@ python-versions = ">=3.6"
 name = "toml"
 version = "0.10.2"
 description = "Python Library for Tom's Obvious, Minimal Language"
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=2.6, !=3.0.*, !=3.1.*, !=3.2.*"
 
@@ -640,7 +640,7 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.9"
-content-hash = "ce38166fc5fa6880ef81119bc6861a64e76fc9ee7fa307fad140141c4585b6fc"
+content-hash = "d545cc3c59e770a2c8576366b14881c599ea753efd5d04a662fd9d5851207abc"
 
 [metadata.files]
 aiohttp = [
