@@ -1,5 +1,6 @@
 import argparse
 import json
+import logging
 from pathlib import Path
 from typing import List, Tuple
 
@@ -7,7 +8,12 @@ import nndownload
 import requests
 import toml
 
+from nico_download.logger import get_logger, get_verbosity, set_verbosity
+
 ENDPOINT_URL = "https://api.search.nicovideo.jp/api/v2/snapshot/video/contents/search"
+
+print(__name__)
+logger = get_logger(__name__)
 
 
 class FileExistsError(Exception):
@@ -30,7 +36,7 @@ class DownloadManager(object):
     ) -> Path:
         url = self.movie_url_prefix + str(video_id)
         if dry_run:
-            print(f"#DRYRUN# Download from url: {url} to {save_path}")
+            logger.info(f"#DRYRUN# Download from url: {url} to {save_path}")
             return save_path
 
         if not overwrite and save_path.exists():
@@ -89,6 +95,9 @@ def main() -> None:
         "--overwrite", action="store_true", help="Overwrite the mp4 file if existing."
     )
     args = parser.parse_args()
+
+    log_level = logging.DEBUG if args.verbose else logging.INFO
+    set_verbosity(log_level)
 
     with open(args.config, "r") as f:
         config = toml.load(f)
