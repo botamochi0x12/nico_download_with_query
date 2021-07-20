@@ -4,6 +4,14 @@ from typing import List, Tuple
 
 import nndownload
 import requests
+from nndownload.nndownload import (
+    BACKOFF_FACTOR,
+    LOGIN_URL,
+    RETRY_ATTEMPTS,
+    AuthenticationException,
+)
+from requests.adapters import HTTPAdapter
+from urllib3.util import Retry
 
 from nico_download.exceptions import FileExistsError
 from nico_download.logger import get_logger
@@ -13,12 +21,44 @@ ENDPOINT_URL = "https://api.search.nicovideo.jp/api/v2/snapshot/video/contents/s
 logger = get_logger(__name__)
 
 
+def _login(username: str, password: str) -> requests.Session:
+    session = requests.session()
+
+    retry = Retry(
+        total=RETRY_ATTEMPTS,
+        read=RETRY_ATTEMPTS,
+        connect=RETRY_ATTEMPTS,
+        backoff_factor=BACKOFF_FACTOR,
+        status_forcelist=(500, 502, 503, 504),
+    )
+    adapter = HTTPAdapter(max_retries=retry)
+    session.mount("http://", adapter)
+    session.mount("https://", adapter)
+
+    session.headers.update(
+        {"User-Agent": f"{nndownload}/{nndownload.nndownload.__version__}"}
+    )
+    logger.info("Logging in...")
+    login_post = {"mail_tel": username, "password": password}
+    login_request = session.post(LOGIN_URL, data=login_post)
+    login_request.raise_for_status()
+    if not session.cookies.get_dict().get("user_session", None):
+        logger.info("Failed to login.")
+        raise AuthenticationException(
+            "Failed to login. Please verify your account email/telephone and password"
+        )
+    logger.info("Logged in.")
+    return session
+
+
 class DownloadManager(object):
     movie_url_prefix = "https://www.nicovideo.jp/watch/"
 
     def __init__(self, uid: str, passwd: str):
         self._uid = uid
         self._passwd = passwd
+        session = _login(self._uid, self._passwd)
+        self._cookie = session.cookies.get_dict()["user_session"]
 
     def download_video(
         self,
@@ -46,8 +86,20 @@ class DownloadManager(object):
 
         try:
             nndownload.execute(
-                "-u", self._uid, "-p", self._passwd, "-o", str(save_path), url
+                "--username",
+                self._uid,
+                "--password",
+                self._passwd,
+                "--session-cookie",
+                self._cookie,
+                "-o",
+                str(save_path),
+                url,
             )
+        except KeyboardInterrupt:
+            logger.warning("KeyboardInterrupt stopped!")
+            save_path.unlink()
+            logger.info(f"Intermediate file {save_path} is removed.")
         except Exception as e:
             logger.critical("Something wrong happened in nndownload.execute()")
             logger.critical(str(e))
