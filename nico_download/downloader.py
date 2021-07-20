@@ -29,18 +29,28 @@ class DownloadManager(object):
     ) -> Path:
         url = self.movie_url_prefix + str(video_id)
         if dry_run:
-            logger.info(f"#DRYRUN# Download from url: {url} to {save_path}")
+            logger.info(f"DRYRUN: Download from url: {url} to {save_path}")
             return save_path
 
-        if not overwrite and save_path.exists():
-            raise FileExistsError(f"{save_path} already exists.")
+        logger.debug(f"Start download from {url}, save to {save_path}")
+        if save_path.exists():
+            if not overwrite:
+                mes = f"{save_path} already exists."
+                logger.critical(mes)
+                raise FileExistsError(mes)
+            else:
+                logger.warning(
+                    f"File {save_path} already exists, but overwrite flag is set."
+                )
+                logger.warning("Continue to download.")
 
         try:
             nndownload.execute(
                 "-u", self._uid, "-p", self._passwd, "-o", str(save_path), url
             )
         except Exception as e:
-            print(e)
+            logger.critical("Something wrong happened in nndownload.execute()")
+            logger.critical(str(e))
             raise RuntimeError()
         return save_path
 
@@ -55,12 +65,15 @@ def fetch_video_id(
         "_sort": "-startTime",
         "_limit": str(max_videos),
     }
+    logger.debug(f"{query_dict=}")
     res = requests.get(ENDPOINT_URL, query_dict)
 
     response_dict = json.loads(res.text)
+    logger.debug(f"{response_dict=}")
     return_value: List[Tuple[str, str]] = []
     for data in response_dict["data"]:
         movie_id = data["contentId"]
         title = data["title"]
         return_value.append((movie_id, title))
+    logger.debug(f"{return_value=}")
     return return_value
