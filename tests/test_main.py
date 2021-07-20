@@ -2,7 +2,8 @@ from pathlib import Path
 
 import pytest
 import toml
-from nico_download.main import DownloadManager, FileExistsError, fetch_video_id
+from nico_download.downloader import DownloadManager, fetch_video_id
+from nico_download.exceptions import FileExistsError
 
 
 @pytest.fixture
