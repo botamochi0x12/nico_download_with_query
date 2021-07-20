@@ -1,0 +1,14 @@
+uid = "example_email@mail.com"
+passwd = "example_password"
+saveroot = "./videos"
+limit = 10
+
+[[queries]]
+query = "実況"
+target = "title"
+subdir = "hoge"
+
+[[queries]]
+query = "ゲーム"
+target = "title"
+subdir = "piyo"
