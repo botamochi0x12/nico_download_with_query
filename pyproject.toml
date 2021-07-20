@@ -9,11 +9,13 @@ python = "^3.9"
 requests = "^2.26.0"
 nndownload = "^1.11"
 toml = "^0.10.2"
+colorlog = "<5.0.0"
 
 [tool.poetry.dev-dependencies]
-pysen = {extras = ["lint"], version = "^0.9.1"}
+pysen = { extras = ["lint"], version = "^0.9.1" }
 ipython = "^7.25.0"
 jedi = "0.17.2"
+pytest-cov = "^2.12.1"
 
 [tool.pysen.lint]
 enable_black = true
@@ -22,10 +24,10 @@ enable_isort = true
 enable_mypy = true
 mypy_preset = "strict"
 line_length = 88
-py_version = "py39"
+py_version = "py38"
 
 [[tool.pysen.lint.mypy_targets]]
-  paths = ["."]
+paths = ["."]
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
