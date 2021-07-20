@@ -1,16 +1,16 @@
-import json
 from pathlib import Path
 
 import pytest
-from nico_download.main import DownloadManager, fetch_video_id
+import toml
+from nico_download.main import DownloadManager, FileExistsError, fetch_video_id
 
 
 @pytest.fixture
 def nico_config():
     here = Path(__file__).parent
-    with open(here / "../passwd.json", "r") as f:
-        config = json.load(f)
-    return config
+    with open(here / "../config.toml", "r") as f:
+        config = toml.load(f)
+    return config["uid"], config["passwd"]
 
 
 def test_fetch_video_id():
@@ -27,11 +27,12 @@ def test_fetch_video_id():
 
 @pytest.mark.parametrize(
     "overwrite_flag",
-    (True, pytest.param(False, marks=pytest.mark.xfail(raises=RuntimeError))),
+    (True, pytest.param(False, marks=pytest.mark.xfail(raises=FileExistsError))),
 )
 @pytest.mark.parametrize("video_id", ["sm37701231", "so24277772"])
 def test_download_movie(tmp_path, video_id, overwrite_flag, nico_config):
-    manager = DownloadManager(uid=nico_config["uid"], passwd=nico_config["passwd"])
+    uid, passwd = nico_config
+    manager = DownloadManager(uid=uid, passwd=passwd)
     target_path = tmp_path / "tmp.mp4"
 
     # make dummy file to overwrite

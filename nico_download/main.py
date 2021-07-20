@@ -5,8 +5,13 @@ from typing import List, Tuple
 
 import nndownload
 import requests
+import toml
 
 ENDPOINT_URL = "https://api.search.nicovideo.jp/api/v2/snapshot/video/contents/search"
+
+
+class FileExistsError(Exception):
+    pass
 
 
 class DownloadManager(object):
@@ -25,14 +30,13 @@ class DownloadManager(object):
     ) -> Path:
         url = self.movie_url_prefix + str(video_id)
         if dry_run:
-            print(f"#DRYRUN# Download from url: {url}")
+            print(f"#DRYRUN# Download from url: {url} to {save_path}")
             return save_path
 
         if not overwrite and save_path.exists():
-            raise RuntimeError(f"{save_path} already exists.")
+            raise FileExistsError(f"{save_path} already exists.")
 
         try:
-            print(nndownload)
             nndownload.execute(
                 "-u", self._uid, "-p", self._passwd, "-o", str(save_path), url
             )
@@ -42,12 +46,15 @@ class DownloadManager(object):
         return save_path
 
 
-def fetch_video_id(query: str, targets: str) -> List[Tuple[str, str]]:
+def fetch_video_id(
+    query: str, targets: str, max_videos: int = 100
+) -> List[Tuple[str, str]]:
     query_dict = {
         "q": query,
         "targets": targets,
         "fields": "contentId,title",
-        "_sort": "startTime",
+        "_sort": "-startTime",
+        "_limit": str(max_videos),
     }
     res = requests.get(ENDPOINT_URL, query_dict)
 
@@ -63,7 +70,10 @@ def fetch_video_id(query: str, targets: str) -> List[Tuple[str, str]]:
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "--outdir", type=str, default="./", help="output root directory"
+        "--config",
+        type=str,
+        default="./config.toml",
+        help="config json path, see passwd.json.example",
     )
     parser.add_argument(
         "--dry-run",
@@ -71,34 +81,37 @@ def main() -> None:
         help="download action will not be actually performed",
     )
     parser.add_argument(
+        "--verbose",
+        action="store_true",
+        help="set log level to DEBUG",
+    )
+    parser.add_argument(
         "--overwrite", action="store_true", help="Overwrite the mp4 file if existing."
     )
     args = parser.parse_args()
 
-    params = {
-        "q": "THE IDOLM@STER MillionRADIO",
-        "targets": "title",
-        "fields": "contentId,title",
-        "_sort": "startTime",
-    }
-    res = requests.get(ENDPOINT_URL, params)
+    with open(args.config, "r") as f:
+        config = toml.load(f)
 
-    response_dict = json.loads(res.text)
-    movie_id = response_dict["data"][0]["contentId"]
-    title = response_dict["data"][0]["title"]
+    manager = DownloadManager(uid=config["uid"], passwd=config["passwd"])
+    limit = config["limit"]
+    for query in config["queries"]:
+        results = fetch_video_id(
+            query=query["query"], targets=query["target"], max_videos=limit
+        )
+        print(results)
+        savedir = Path(config["saveroot"])
+        if len(query["subdir"]) > 0:
+            savedir = savedir / query["subdir"]
 
-    results = fetch_video_id(query="THE IDOLM@STER MillionRADIO", targets="title")
-    save_root = Path("/mnt/c/Users/ayase/Downloads")
-
-    with open("./passwd.json", "r") as f:
-        settings = json.load(f)
-    manager = DownloadManager(**settings)
-    for movie_id, title in results:
-        save_path = save_root / f"{title}.mp4"
-
-        if save_path.exists() and not args.overwrite:
-            raise RuntimeError(f"{save_path} already exists.")
-        manager.download_video(movie_id, save_path, args.dry_run)
+        for movie_id, title in results:
+            save_path = savedir / f"{title}.mp4"
+            try:
+                manager.download_video(
+                    movie_id, save_path, args.overwrite, args.dry_run
+                )
+            except FileExistsError as e:
+                print(e)
 
 
 if __name__ == "__main__":
