@@ -2,7 +2,8 @@
 
 # What's this
 
-ニコニコ動画から検索して指定場所にdownloadするpython script
+- ニコニコ動画から検索して指定場所にdownloadするpython script
+- depends on [nndownload](https://github.com/AlexAplin/nndownload)
 
 # how to use
 
@@ -16,11 +17,12 @@ $ poetry install
 
 ## edit config
 
-- see `queries.toml`
-- edit `passed.json` to pass the uid and password of niconico
+- `cp config.toml.example config.toml`
+- edit `config.toml` to pass the uid and password of niconico and queries
 
 ## run
 
 ```bash
-$ poetry run nico_download/main.py
+$ poetry run main.py --help  # to check flags
+$ poetry run main.py
 ```
