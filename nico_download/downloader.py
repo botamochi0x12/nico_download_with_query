@@ -1,4 +1,5 @@
 import json
+import sys
 from pathlib import Path
 from typing import List, Tuple
 
@@ -100,6 +101,7 @@ class DownloadManager(object):
             logger.warning("KeyboardInterrupt stopped!")
             save_path.unlink()
             logger.info(f"Intermediate file {save_path} is removed.")
+            sys.exit(0)
         except Exception as e:
             logger.critical("Something wrong happened in nndownload.execute()")
             logger.critical(str(e))
