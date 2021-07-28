@@ -6,7 +6,7 @@ import toml
 
 from nico_download.downloader import DownloadManager, fetch_video_id
 from nico_download.exceptions import FileExistsError
-from nico_download.logger import set_verbosity
+from nico_download.logger import add_file_handler, set_verbosity
 
 
 def main() -> None:
@@ -15,6 +15,12 @@ def main() -> None:
         "--config",
         type=str,
         default="./config.toml",
+        help="config json path, see passwd.json.example",
+    )
+    parser.add_argument(
+        "--logfile",
+        type=str,
+        default="./download.log",
         help="config json path, see passwd.json.example",
     )
     parser.add_argument(
@@ -33,6 +39,8 @@ def main() -> None:
     args = parser.parse_args()
 
     log_level = logging.DEBUG if args.verbose else logging.INFO
+    if args.logfile is not None:
+        add_file_handler(args.logfile)
     set_verbosity(log_level)
 
     with open(args.config, "r") as f:
