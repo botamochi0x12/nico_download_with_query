@@ -77,7 +77,7 @@ class DownloadManager(object):
         if save_path.exists():
             if not overwrite:
                 mes = f"{save_path} already exists."
-                logger.critical(mes)
+                logger.error(mes)
                 raise FileExistsError(mes)
             else:
                 logger.warning(
@@ -98,14 +98,13 @@ class DownloadManager(object):
                 url,
             )
         except KeyboardInterrupt:
-            logger.warning("KeyboardInterrupt stopped!")
+            logger.critical("KeyboardInterrupt stopped!")
             save_path.unlink()
-            logger.info(f"Intermediate file {save_path} is removed.")
+            logger.critical(f"Intermediate file {save_path} is removed.")
             sys.exit(0)
         except Exception as e:
-            logger.critical("Something wrong happened in nndownload.execute()")
-            logger.critical(str(e))
-            raise RuntimeError()
+            logger.exception("Something wrong happened in nndownload.execute()")
+            raise RuntimeError(str(e))
         return save_path
 
 
