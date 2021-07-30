@@ -86,6 +86,7 @@ class DownloadManager(object):
                 logger.warning("Continue to download.")
 
         try:
+            logger.info(f"Start download from {url}.")
             nndownload.execute(
                 "--username",
                 self._uid,
@@ -105,6 +106,7 @@ class DownloadManager(object):
         except Exception as e:
             logger.exception("Something wrong happened in nndownload.execute()")
             raise RuntimeError(str(e))
+        logger.info(f"Successfully download to {save_path}.")
         return save_path
 
 
