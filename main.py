@@ -3,7 +3,6 @@ import logging
 from pathlib import Path
 
 import toml
-
 from nico_download.downloader import DownloadManager, fetch_video_id
 from nico_download.exceptions import FileExistsError
 from nico_download.logger import add_file_handler, set_verbosity
@@ -64,6 +63,9 @@ def main() -> None:
                 )
             except FileExistsError as e:
                 print(e)
+            except OSError as e:
+                print(f"OSError: {str(e)}")
+                print(f"skip {movie_id}, {title}")
 
 
 if __name__ == "__main__":
