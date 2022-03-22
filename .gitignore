@@ -130,3 +130,5 @@ dmypy.json
 
 passwd.json
 config.toml
+cron_download.log*
+
