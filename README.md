@@ -23,6 +23,6 @@ $ poetry install
 ## run
 
 ```bash
-$ poetry run main.py --help  # to check flags
-$ poetry run main.py
+$ poetry run python main.py --help  # to check flags
+$ poetry run python main.py
 ```
